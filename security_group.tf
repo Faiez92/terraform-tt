@@ -9,6 +9,7 @@ resource "aws_security_group" "alb" {
     protocol         = "-1"
     cidr_blocks = [data.aws_vpc.shared.cidr_block]
     ipv6_cidr_blocks = ["xxxx:xxxx::/32"]
+    description = "Configure outbound traffic"
   }
 
   tags = {
