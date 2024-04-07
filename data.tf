@@ -4,37 +4,37 @@ data "aws_vpc" "shared" {
   id = "vpc-123456789"
 }
 
-data "aws_subnet" "private_networking_1" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.shared.id]
-  }
-  filter {
-    name   = "cidr-block"
-    values = [cidrsubnet(data.aws_vpc.shared.cidr_block, 8, 0)]
-  }
+// Définir les filtres communs pour les sous-réseaux
+locals {
+  subnet_filters = [
+    {
+      name   = "vpc-id"
+      values = [data.aws_vpc.shared.id]
+    },
+    {
+      name   = "cidr-block"
+      values = [data.aws_vpc.shared.cidr_block]
+    },
+  ]
 }
-data "aws_subnet" "private_networking_2" {
+
+// Générer les données des sous-réseaux en utilisant une boucle
+data "aws_subnet" "private_networking" {
+  count = 3  // Nombre de sous-réseaux à créer
+
   filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.shared.id]
+    // Utiliser les filtres communs
+    name   = local.subnet_filters[count.index].name
+    values = local.subnet_filters[count.index].values
   }
+
   filter {
     name   = "cidr-block"
-    values = [cidrsubnet(data.aws_vpc.shared.cidr_block, 8, 1)]
-  }
-}
-data "aws_subnet" "private_networking_3" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.shared.id]
-  }
-  filter {
-    name   = "cidr-block"
-    values = [cidrsubnet(data.aws_vpc.shared.cidr_block, 8, 2)]
+    values = [cidrsubnet(data.aws_vpc.shared.cidr_block, 8, count.index)]
   }
 }
 
+// Récupérer les zones Route 53
 data "aws_route53_zone" "gitlab" {
   name = var.gitlab_hosted_zone_name
 }
